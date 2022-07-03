@@ -1,29 +1,51 @@
-import Vue from 'vue'
-import VueRouter from 'vue-router'
-import HomeView from '../views/HomeView.vue'
+import Vue from 'vue';
+import VueRouter from 'vue-router';
+import HomeView from '../views/HomeView.vue';
 
-Vue.use(VueRouter)
+import Store from "@/store/"
+
+Vue.use(VueRouter);
 
 const routes = [
   {
     path: '/',
     name: 'home',
-    component: HomeView
+    component: HomeView,
+    meta: {
+      accessLevel: "public"
+    }
   },
   {
-    path: '/about',
-    name: 'about',
-    // route level code-splitting
-    // this generates a separate chunk (about.[hash].js) for this route
-    // which is lazy-loaded when the route is visited.
-    component: () => import(/* webpackChunkName: "about" */ '../views/AboutView.vue')
-  }
-]
+    path: '/users',
+    name: 'Users',
+    component: () => import('@/views/UsersView.vue'),
+    meta: {
+      accessLevel: "private"
+    }
+  },
+];
 
 const router = new VueRouter({
   mode: 'history',
   base: process.env.BASE_URL,
-  routes
+  routes,
+});
+
+
+
+router.beforeEach((to, from, next) => {
+  const accessLevel = to.meta.accessLevel
+  const activeLogin = Store.getters["session/activeLogin"]
+
+  if (accessLevel === "public") {
+    next()
+  } else if (accessLevel === "private") {
+    if (activeLogin) {
+      next()
+    } else {
+      next("/")
+    }
+  }
 })
 
-export default router
+export default router;
